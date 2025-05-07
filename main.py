@@ -77,61 +77,53 @@ class GameControllerGUI:
         self.stop_game_button.grid(
             row=2, column=0, pady=5, sticky=(tk.W, tk.E))
 
-        # --- ロボット選択 ---
-        robot_select_frame = ttk.LabelFrame(
-            main_frame, text="Select Team", padding="10")
-        robot_select_frame.grid(row=3, column=0, pady=5, sticky=(tk.W, tk.E))
-        robot_select_frame.columnconfigure(0, weight=1)  # 列を均等に分割
-        robot_select_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(1, weight=0)  # 固定サイズ
-
-        # ラジオボタンの変数
-        self.selected_robot = tk.StringVar()
-        # 初期選択を設定 (有効なロボットがあればそれをデフォルトにする)
-        initial_selection = "none"
-        self.selected_robot.set(initial_selection)
-
-        # Yellow ロボット選択ラジオボタン
-        self.yellow_radio = ttk.Radiobutton(
-            robot_select_frame, text="Yellow", variable=self.selected_robot, value="yellow")
-        self.yellow_radio.grid(row=0, column=0, sticky=tk.W, padx=5)
-
-        # Blue ロボット選択ラジオボタン
-        self.blue_radio = ttk.Radiobutton(
-            robot_select_frame, text="Blue", variable=self.selected_robot, value="blue")
-        self.blue_radio.grid(row=0, column=1, sticky=tk.W, padx=5)
-
         # --- ボール配置コマンド ---
         placement_frame = ttk.LabelFrame(
             main_frame, text="Ball Placement (Selected Robot)", padding="10")
-        placement_frame.grid(row=4, column=0, pady=5, sticky=(tk.W, tk.E))
+        placement_frame.grid(row=3, column=0, pady=5, sticky=(tk.W, tk.E))
         placement_frame.columnconfigure(0, weight=0)  # ラベルは固定サイズ
         placement_frame.columnconfigure(1, weight=1)  # 入力欄が広がる
         placement_frame.columnconfigure(2, weight=0)  # ラベルは固定サイズ
         placement_frame.columnconfigure(3, weight=1)  # 入力欄が広がる
-        placement_frame.columnconfigure(4, weight=1)  # ボタンが広がる
-        main_frame.rowconfigure(4, weight=0)  # 固定サイズ
+        placement_frame.columnconfigure(4, weight=0)  # ボタンが広がる
+        main_frame.rowconfigure(3, weight=0)  # 固定サイズ
+
+        # ラジオボタンの変数
+        self.selected_robot = tk.StringVar(value="none")  # 初期値を "none" に設定
+
+        # ラジオボタン用のフレームを分離
+        radio_frame = ttk.Frame(placement_frame)
+        radio_frame.grid(row=0, column=0, columnspan=5,
+                         sticky=(tk.W, tk.E), pady=(0, 5))
+
+        self.yellow_radio = ttk.Radiobutton(
+            radio_frame, text="Yellow", variable=self.selected_robot, value="yellow")
+        self.yellow_radio.grid(row=0, column=0, sticky=tk.W, padx=(5, 2))
+
+        self.blue_radio = ttk.Radiobutton(
+            radio_frame, text="Blue", variable=self.selected_robot, value="blue")
+        self.blue_radio.grid(row=0, column=1, sticky=tk.W, padx=(5, 2))
 
         ttk.Label(placement_frame, text="X:").grid(
-            row=0, column=0, sticky=tk.W, padx=(5, 0))
+            row=1, column=0, sticky=tk.W, padx=(5, 0))
         self.x_entry = ttk.Entry(placement_frame)
         self.x_entry.insert(0, "0")  # デフォルト値
-        self.x_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
+        self.x_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5)
 
         ttk.Label(placement_frame, text="Y:").grid(
-            row=0, column=2, sticky=tk.W, padx=(5, 0))
+            row=1, column=2, sticky=tk.W, padx=(5, 0))
         self.y_entry = ttk.Entry(placement_frame)
         self.y_entry.insert(0, "0")  # デフォルト値
-        self.y_entry.grid(row=0, column=3, sticky=(tk.W, tk.E), padx=5)
+        self.y_entry.grid(row=1, column=3, sticky=(tk.W, tk.E), padx=5)
 
         self.place_ball_custom_button = ttk.Button(
             placement_frame, text="PLACE BALL", command=self.send_place_ball_command_custom)
         self.place_ball_custom_button.grid(
-            row=0, column=4, sticky=(tk.N, tk.S, tk.E, tk.W), padx=5)
+            row=1, column=4, sticky=(tk.N, tk.S, tk.E, tk.W), padx=5)
 
         # --- ステータス表示 ---
         self.status_label = ttk.Label(main_frame, text="", anchor=tk.CENTER)
-        self.status_label.grid(row=5, column=0, pady=10, sticky=(tk.W, tk.E))
+        self.status_label.grid(row=4, column=0, pady=10, sticky=(tk.W, tk.E))
         # 最後の行（ステータスラベル）がウィンドウサイズ変更時に拡張されるように設定
         main_frame.rowconfigure(5, weight=1)
 
@@ -268,7 +260,6 @@ def main():
     root = tk.Tk()
     gui = GameControllerGUI(root)
     root.mainloop()
-    # root.mainloop() が終了したらここまで来る
     print("Game Controller GUI finished.")
 
 
