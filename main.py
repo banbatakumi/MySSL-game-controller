@@ -4,7 +4,7 @@ import socket
 import json
 import config
 import threading  # GUIをフリーズさせないためにUDP送信を別スレッドで行う場合に使用
-import sys  # 終了処理のため
+import sys
 
 
 class GameControllerGUI:
@@ -14,7 +14,7 @@ class GameControllerGUI:
         master.geometry("500x600")  # ウィンドウの初期サイズ設定
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.target_ip = config.GAME_COMMAND_TARGET_IP
+        self.target_ip = config.LOCAL_IP
         self.target_port = config.GAME_COMMAND_LISTEN_PORT
 
         # ウィンドウサイズ変更時の挙動を設定
@@ -28,17 +28,31 @@ class GameControllerGUI:
 
         # メインフレーム内のグリッド設定 (列方向の中央寄せと拡張)
         main_frame.columnconfigure(0, weight=1)
-        # main_frame.rowconfigure(tk.ALL, weight=0) # 各行のweightは個別に設定する
 
         # --- 通信情報表示 ---
-        ttk.Label(main_frame, text=f"Sending commands to: {self.target_ip}:{self.target_port}").grid(
-            row=0, column=0, pady=(0, 10), sticky=tk.W)
-        main_frame.rowconfigure(0, weight=0)  # 固定サイズ
+        ip_frame = ttk.LabelFrame(
+            main_frame, text="Target IP", padding="10")
+        ip_frame.grid(row=1, column=0, pady=5, sticky=(tk.W, tk.E))
+        ip_frame.columnconfigure(0, weight=1)  # ボタンが横いっぱいに広がるように
+        main_frame.rowconfigure(2, weight=0)  # 固定サイズ
+        self.ip_entry = ttk.Entry(ip_frame)
+        self.ip_entry.insert(0, self.target_ip)  # デフォルト値を設定
+        self.ip_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=5)
+
+        ttk.Button(ip_frame, text="Update IP", command=lambda: self.update_ip("Custom")).grid(
+            row=0, column=1, sticky=(tk.W, tk.E), padx=5)
+        ttk.Button(ip_frame, text="Local IP", command=lambda: self.update_ip("Local")).grid(
+            row=0, column=2, sticky=(tk.W, tk.E), padx=5)
+
+        self.target_ip_label = ttk.Label(
+            ip_frame, text=f"Target IP: {self.target_ip}:{self.target_port}")
+        self.target_ip_label.grid(
+            row=1, column=0, columnspan=3, pady=(10, 10), sticky=tk.W)
 
         # --- ゲームコントロールボタン ---
         game_control_frame = ttk.LabelFrame(
             main_frame, text="Game Control (All Robots)", padding="10")
-        game_control_frame.grid(row=1, column=0, pady=5, sticky=(tk.W, tk.E))
+        game_control_frame.grid(row=2, column=0, pady=5, sticky=(tk.W, tk.E))
         game_control_frame.columnconfigure(0, weight=1)  # ボタンが横いっぱいに広がるように
         main_frame.rowconfigure(2, weight=0)  # 固定サイズ
 
@@ -65,8 +79,8 @@ class GameControllerGUI:
 
         # --- ロボット選択 ---
         robot_select_frame = ttk.LabelFrame(
-            main_frame, text="Select Robot", padding="10")
-        robot_select_frame.grid(row=2, column=0, pady=5, sticky=(tk.W, tk.E))
+            main_frame, text="Select Team", padding="10")
+        robot_select_frame.grid(row=3, column=0, pady=5, sticky=(tk.W, tk.E))
         robot_select_frame.columnconfigure(0, weight=1)  # 列を均等に分割
         robot_select_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(1, weight=0)  # 固定サイズ
@@ -75,25 +89,17 @@ class GameControllerGUI:
         self.selected_robot = tk.StringVar()
         # 初期選択を設定 (有効なロボットがあればそれをデフォルトにする)
         initial_selection = "none"
-        if config.ENABLE_YELLOW_ROBOT:
-            initial_selection = "yellow"
-        elif config.ENABLE_BLUE_ROBOT:  # Yellowが無効でBlueが有効な場合
-            initial_selection = "blue"
         self.selected_robot.set(initial_selection)
 
         # Yellow ロボット選択ラジオボタン
         self.yellow_radio = ttk.Radiobutton(
-            robot_select_frame, text="Yellow Robot", variable=self.selected_robot, value="yellow")
+            robot_select_frame, text="Yellow", variable=self.selected_robot, value="yellow")
         self.yellow_radio.grid(row=0, column=0, sticky=tk.W, padx=5)
-        if not config.ENABLE_YELLOW_ROBOT:
-            self.yellow_radio.config(state=tk.DISABLED)  # 無効なら選択不可に
 
         # Blue ロボット選択ラジオボタン
         self.blue_radio = ttk.Radiobutton(
-            robot_select_frame, text="Blue Robot", variable=self.selected_robot, value="blue")
+            robot_select_frame, text="Blue", variable=self.selected_robot, value="blue")
         self.blue_radio.grid(row=0, column=1, sticky=tk.W, padx=5)
-        if not config.ENABLE_BLUE_ROBOT:
-            self.blue_radio.config(state=tk.DISABLED)  # 無効なら選択不可に
 
         # --- ボール配置コマンド ---
         placement_frame = ttk.LabelFrame(
@@ -109,13 +115,13 @@ class GameControllerGUI:
         ttk.Label(placement_frame, text="X:").grid(
             row=0, column=0, sticky=tk.W, padx=(5, 0))
         self.x_entry = ttk.Entry(placement_frame)
-        self.x_entry.insert(0, str(config.BALL_PLACEMENT_TARGET_X))  # デフォルト値
+        self.x_entry.insert(0, "0")  # デフォルト値
         self.x_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
 
         ttk.Label(placement_frame, text="Y:").grid(
             row=0, column=2, sticky=tk.W, padx=(5, 0))
         self.y_entry = ttk.Entry(placement_frame)
-        self.y_entry.insert(0, str(config.BALL_PLACEMENT_TARGET_Y))  # デフォルト値
+        self.y_entry.insert(0, "0")  # デフォルト値
         self.y_entry.grid(row=0, column=3, sticky=(tk.W, tk.E), padx=5)
 
         self.place_ball_custom_button = ttk.Button(
@@ -139,13 +145,7 @@ class GameControllerGUI:
         if self.sock:
             self.sock.close()
         self.master.destroy()
-        # GUIを閉じても main.py は動き続ける。
-        # main.py も終了させたい場合は、main.py に終了トリガーを送るか、
-        # あるいは GUI を閉じるのではなく main.py を停止させる運用にする。
-        # この例では GUI アプリケーションだけを閉じる。
-        # sys.exit() はプロセス全体を終了させてしまうので、GUIだけなら不要だが、
-        # 念のため残しておくとプロセスゾンビを防ぐことがある。
-        # GUIを閉じても main.py を終了させたくない場合は sys.exit() は削除。
+        sys.exit()
 
     def send_udp(self, data):
         """UDP経由でJSONデータを送信する"""
@@ -182,6 +182,20 @@ class GameControllerGUI:
             self.master.after(0, self.update_status_label,
                               f"Unexpected error: {e}", "red")
 
+    def update_ip(self, type):
+        """IPアドレスを更新する"""
+        new_ip = self.ip_entry.get()
+        if type == "Local":
+            new_ip = config.LOCAL_IP
+        if new_ip:
+            self.target_ip = new_ip
+            self.update_status_label(f"IP updated to {new_ip}", "green")
+            self.target_ip_label.config(
+                # ラベルを更新
+                text=f"Target IP: {self.target_ip}:{self.target_port}")
+        else:
+            self.update_status_label("Invalid IP address.", "red")
+
     def update_status_label(self, text, color):
         """ステータスラベルを更新する (GUIスレッドから呼ばれる)"""
         self.status_label.config(text=text, foreground=color)
@@ -189,7 +203,7 @@ class GameControllerGUI:
     def get_selected_robot_color(self):
         """選択されているロボットの色を取得する"""
         selected_color = self.selected_robot.get()
-        if selected_color == "none" or (selected_color == "yellow" and not config.ENABLE_YELLOW_ROBOT) or (selected_color == "blue" and not config.ENABLE_BLUE_ROBOT):
+        if selected_color == "none":
             # print("Warning: No valid robot selected.") # ログが煩雑になるのでコメントアウト
             self.update_status_label(
                 "Error: No valid robot selected.", "orange")
