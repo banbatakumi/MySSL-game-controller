@@ -1,5 +1,5 @@
 # ゲームコントローラーからのコマンド受信ポート (新設)
-GAME_COMMAND_LISTEN_PORT = 50011  # << 新しいポート >>
+GAME_COMMAND_LISTEN_PORT = 50008  # << 新しいポート >>
 
 # ゲームコントローラーがコマンドを送信する相手 (main.py が動いているPCのIP)
 LOCAL_IP = "127.0.0.1"  # << main.py が動くPCのIPに変更が必要な場合あり >>

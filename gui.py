@@ -79,7 +79,7 @@ class GameControllerGUI:
 
         # --- ボール配置コマンド ---
         placement_frame = ttk.LabelFrame(
-            main_frame, text="Ball Placement (Selected Robot)", padding="10")
+            main_frame, text="Ball Placement", padding="10")
         placement_frame.grid(row=3, column=0, pady=5, sticky=(tk.W, tk.E))
         placement_frame.columnconfigure(0, weight=0)  # ラベルは固定サイズ
         placement_frame.columnconfigure(1, weight=1)  # 入力欄が広がる
@@ -155,7 +155,7 @@ class GameControllerGUI:
             # GUIの更新はGUIスレッドで行う必要がある
             # .after(ms, callback) を使う
             command_text = data.get('command', 'Unknown')
-            target_text = data.get('robot_color', 'All')
+            target_text = data.get('team_color', 'All')
             status_msg = f"Sent {command_text} ({target_text})"
             if command_text == "place_ball":
                 status_msg += f" to ({data.get('x')}, {data.get('y')})"
@@ -192,7 +192,7 @@ class GameControllerGUI:
         """ステータスラベルを更新する (GUIスレッドから呼ばれる)"""
         self.status_label.config(text=text, foreground=color)
 
-    def get_selected_robot_color(self):
+    def get_selected_team_color(self):
         """選択されているロボットの色を取得する"""
         selected_color = self.selected_robot.get()
         if selected_color == "none":
@@ -218,8 +218,8 @@ class GameControllerGUI:
 
     def send_place_ball_command_custom(self):
         """選択されているロボットに PLACE BALL コマンドを送信 (カスタム位置)"""
-        robot_color = self.get_selected_robot_color()
-        if not robot_color:
+        team_color = self.get_selected_team_color()
+        if not team_color:
             return
 
         try:
@@ -235,7 +235,7 @@ class GameControllerGUI:
 
             command = {"type": "game_command", "command": "place_ball",
                        "x": x, "y": y,
-                       "robot_color": robot_color}
+                       "team_color": team_color}
             self.send_udp(command)
         except ValueError:
             self.update_status_label(
