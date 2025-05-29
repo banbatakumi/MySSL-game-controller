@@ -15,7 +15,8 @@ class GameControllerGUI:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.target_ip = config.LOCAL_IP
-        self.target_port = config.GAME_COMMAND_LISTEN_PORT
+        self.target_port_yellow = config.GAME_COMMAND_PORT_YELLOW
+        self.target_port_blue = config.GAME_COMMAND_PORT_BLUE
 
         # ウィンドウサイズ変更時の挙動を設定
         master.columnconfigure(0, weight=1)
@@ -45,7 +46,7 @@ class GameControllerGUI:
             row=0, column=2, sticky=(tk.W, tk.E), padx=5)
 
         self.target_ip_label = ttk.Label(
-            ip_frame, text=f"Target IP: {self.target_ip}:{self.target_port}")
+            ip_frame, text=f"Target IP: {self.target_ip}:{self.target_port_yellow} (Yellow), {self.target_port_blue} (Blue)", anchor=tk.W)
         self.target_ip_label.grid(
             row=1, column=0, columnspan=3, pady=(10, 10), sticky=tk.W)
 
@@ -150,7 +151,10 @@ class GameControllerGUI:
         try:
             json_data = json.dumps(data)
             byte_data = json_data.encode('utf-8')
-            self.sock.sendto(byte_data, (self.target_ip, self.target_port))
+            self.sock.sendto(
+                byte_data, (self.target_ip, self.target_port_yellow))
+            self.sock.sendto(
+                byte_data, (self.target_ip, self.target_port_blue))
             print(f"Sent: {data}")
             # GUIの更新はGUIスレッドで行う必要がある
             # .after(ms, callback) を使う
@@ -184,7 +188,7 @@ class GameControllerGUI:
             self.update_status_label(f"IP updated to {new_ip}", "green")
             self.target_ip_label.config(
                 # ラベルを更新
-                text=f"Target IP: {self.target_ip}:{self.target_port}")
+                text=f"Target IP: {self.target_ip}:{self.target_port_yellow} (Yellow), {self.target_port_blue} (Blue)")
         else:
             self.update_status_label("Invalid IP address.", "red")
 
