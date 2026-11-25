@@ -67,16 +67,31 @@ class GameControllerGUI:
         self.emergency_stop_button.grid(
             row=0, column=0, pady=5, sticky=(tk.W, tk.E))
 
+        self.stop_game_button = ttk.Button(
+            game_control_frame, text="STOP GAME", command=self.send_stop_game_command)
+        self.stop_game_button.grid(
+            row=1, column=0, pady=5, sticky=(tk.W, tk.E))
+
+        # --- キックオフチーム選択ラジオボタンの追加 ---
+        self.kickoff_team = tk.StringVar(value="force")
+        kickoff_radio_frame = ttk.Frame(game_control_frame)
+        kickoff_radio_frame.grid(row=2, column=0, pady=(0, 5), sticky=tk.W)
+
+        ttk.Radiobutton(
+            kickoff_radio_frame, text="Force", variable=self.kickoff_team, value="force"
+        ).grid(row=0, column=0, padx=(0, 5))
+        ttk.Radiobutton(
+            kickoff_radio_frame, text="Yellow", variable=self.kickoff_team, value="yellow"
+        ).grid(row=0, column=1, padx=(0, 5))
+        ttk.Radiobutton(
+            kickoff_radio_frame, text="Blue", variable=self.kickoff_team, value="blue"
+        ).grid(row=0, column=2, padx=(0, 5))
+
         # ゲームスタートボタン
         self.start_game_button = ttk.Button(
             game_control_frame, text="START GAME", command=self.send_start_game_command)
         self.start_game_button.grid(
-            row=1, column=0, pady=5, sticky=(tk.W, tk.E))
-
-        self.stop_game_button = ttk.Button(
-            game_control_frame, text="STOP GAME", command=self.send_stop_game_command)
-        self.stop_game_button.grid(
-            row=2, column=0, pady=5, sticky=(tk.W, tk.E))
+            row=3, column=0, pady=5, sticky=(tk.W, tk.E))
 
         # --- ボール配置コマンド ---
         placement_frame = ttk.LabelFrame(
@@ -212,7 +227,12 @@ class GameControllerGUI:
 
     def send_start_game_command(self):
         """START GAME コマンドを送信 (全ロボット対象)"""
-        command = {"type": "game_command", "command": "start_game"}
+        kickoff_team = self.kickoff_team.get()
+        command = {
+            "type": "game_command",
+            "command": "start_game",
+            "kickoff_team": kickoff_team
+        }
         self.send_udp(command)
 
     def send_stop_game_command(self):
